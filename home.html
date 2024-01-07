@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+
+<html lang="en">
+    <head>
+        <meta charset="ascii">
+        <title>homepage</title>
+    </head>
+    <body>
+        <h1>HOMEPAGE</h1>
+        <input placeholder="id to set your post apart..." name="uid" id="uid"><br/>
+        <input placeholder="Title" name="title" id="title"><br/>
+        <textarea placeholder="Content..." name="text-input" id="inpt" cols=50 rows=10></textarea>
+        <br/>
+        <button id="btn">submit</button>
+        <button id="list">explore posts</button>
+        <p id="err"></p>
+    </body>
+    <script> 
+        const host = window.location.host;
+        var list_page = (input) => {
+            let vars = input.sort();
+            var x = "<!DOCTYPE html>\n" +
+                    "<html>\n" +
+                    "<head>\n" +
+                    "<meta charset=\"ascii\">\n" +
+                    "<title>post_list</title>\n" +
+                    "</head>\n" +
+                    "<body>\n" +
+                    "<a href=\"http://" + host + "/" + "\">homepage</a><br/>\n";
+            for(let i = 0; i < vars.length; i++) {
+                vars[i].replace("/", "%2f").replace("&","%26")
+                .replace("%", "%25").replace("?", "%3f")
+                .replace("=", "%3d").replace(":", "%3a");
+
+                x += "<a href=\"http://" + host + "/" + vars[i] + "\">" + vars[i] + "</a><br/>\n"
+            }
+            x += "</body>\n</html>\n";
+            console.log(x);
+            return x;
+        };
+
+        console.log('http://' + host);
+        var xhr    = new XMLHttpRequest();
+        var button = document.getElementById("btn");
+        var title  = document.getElementById("title");
+        var input  = document.getElementById("inpt");
+        var uid    = document.getElementById("uid");
+        var l_btn  = document.getElementById("list");
+        title.value = "";
+        input.value = "";
+        uid.value = "";
+        l_btn.onclick = () => {
+            var x = "";
+            console.log("abc\n");
+            xhr.onload = () => {
+                console.log(xhr.response);
+                x = list_page(xhr.responseText.split("\n"));
+                document.documentElement.innerHTML = x;
+            }
+            xhr.open("GET", "/list.all");
+            xhr.send();
+        };
+        button.onclick = () => {
+            title.value = 
+                title.value.replace("/", "%2f").replace("&","%26")
+                .replace("%", "%25").replace("?", "%3f")
+                .replace("=", "%3d").replace(":", "%3a")
+                .replace(".", "%2e").replace("!", "%21")
+                .replace(" ", "%20").replace("#", "%23")
+                .replace("\"", "%22").replace("$", "%25")
+                .replace("'", "%27").replace("(", "%28")
+                .replace(")", "%29").replace("*", "%2a")
+                .replace("+", "%2b").replace(",", "%2c")
+                .replace("-", "%2d").replace("@", "%40")
+                .replace("[", "%5b").replace("\\", "%5c")
+                .replace("]", "%5d").replace("^", "%5e")
+                .replace("_", "%5f").replace("`", "%60")
+                .replace("{", "%7b").replace("|", "%7c")
+                .replace("}", "%7d").replace("~", "%7e");
+            if(title.value === "") {
+                return 0;
+            }
+            xhr.onload = () => {
+                let x = xhr.status / 100;
+                if(x != 1 && x != 2 && x != 3) {
+                    document.getElementById("err").innerHTML = "http error: " + xhr.status.toString();
+                    if(xhr.status == 409) {
+                        document.getElementById("err").innerHTML += "<br/>You are likely using a name uid combo that has previously been used on a post. Please change uid and repost";
+                    }
+                } else {
+                    document.getElementById("err").innerHTML = "";
+                    title.value = "";
+                    input.value = "";
+                }
+                console.log(xhr.response);
+            };
+            xhr.open("POST", title.value + ".html-" + uid.value);
+            xhr.send("<!DOCTYPE html>\n<html>\n" + "<head>\n" +
+                 "<title>" + title.value + "</title>\n" +
+                 "</head>\n" +
+                 "<body>\n" +
+                 "<h1>" + title.value + "</h1>\n" +
+                 input.value.replace("<script>", "\\<script\\>").replace(
+                    "<\/script>", "\\<\/script\\>") +
+                 "</body>\n" +
+                 "\n</html>\n");
+            
+        };
+    </script>
+</html>
